@@ -1,8 +1,5 @@
 from ast import Lambda
-from cgitb import lookup
-from os import times
 import time
-from tkinter import NS
 import pandas as pd
 import pygal as pg
 
@@ -41,9 +38,6 @@ def get_time_series():
             print("3. Weekly")
             print("4. Monthly")
             series = input("Enter the time series option(1,2,3,4): ")
-            if series is not "1" or series is not "2" or series is not "3" or series is not "4":
-                again = True
-                return again
 
             if series == "1":
                 print("\n\n1. 1min")
