@@ -5,6 +5,7 @@ import pygal as pg
 # from datetime import datetime, date, time, timedelta
 
 def fetchSymbol():
+    print('')
     userChoice = input("Enter the stock symbol you are looking for: ")
     return userChoice.upper()
 
@@ -262,6 +263,7 @@ def main():
         userObject = createUserObject()
         api(userObject)
 
+        print('')
         runAgain = input("Would you like to view more stock data? (y/n): ")
         if runAgain.lower() != 'y':
             print("Goodbye!")
