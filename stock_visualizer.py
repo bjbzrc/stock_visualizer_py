@@ -1,5 +1,4 @@
 from ast import Lambda
-from mimetypes import init
 import time
 import pandas as pd
 import pygal as pg
@@ -163,7 +162,7 @@ def generateChart(url,userObject):
 
 
     if chartChoice == "1":
-        chart = pg.Bar()
+        chart = pg.Bar(x_label_rotation=45)
     if chartChoice == "2":
         chart = pg.Line(x_label_rotation=20)
     
