@@ -2,12 +2,11 @@ from ast import Lambda
 import time
 import pandas as pd
 import pygal as pg
-# from datetime import datetime, date, time, timedelta
 
 def fetchSymbol():
     print('')
     userChoice = input("Enter the stock symbol you are looking for: ")
-    return userChoice.upper()
+    return userChoice
 
 
 def chartType():
@@ -28,48 +27,29 @@ def chartType():
             return chart_type
 
         
-def get_time_series():
-    again = True
-    while again:
+def get_time_series(symbol):
+    while True:
         try: 
-            interval = Lambda
+            intervalOption = Lambda
             print("Select the Time Series of the chart you want to Generate")
             print("1. Intraday")
             print("2. Daily")
             print("3. Weekly")
             print("4. Monthly")
-            series = input("Enter the time series option(1,2,3,4): ")
-            isIntra = False
-
-            if series == "1":
-                isIntra = True
+            timeSeries = input("Enter the time series option(1,2,3,4): ")
+            if timeSeries == "1":
                 print("\n\n1. 1min")
                 print("2. 5min")
                 print("3. 15min")
                 print("4. 30min")
                 print("5. 60min")
-                intervalChoice = input("Please choose time interval: ")
-                match intervalChoice:
-                    case "1":
-                        interval = 1
-                    case "2":
-                        interval = 5
-                    case "3":
-                        interval = 15
-                    case "4":
-                        interval = 30
-                    case "5":
-                        interval = 60
-                    case _:
-                        again = True
-            timeSeriesObject = {"series": series,
-                                "interval": interval,
-                                "isIntra" : isIntra}
-            again = False
+                intervalOption = input("Please choose time interval: ")
+            userChoiceArray = [timeSeries, intervalOption, symbol]
         except ValueError:
             print("This is an unacceptable response, enter a valid value")
-        
-    return timeSeriesObject
+            continue
+        else:
+            return userChoiceArray
 
         
 def dateFormatCheck(date):
@@ -122,146 +102,77 @@ def getDates():
     return datesArray
 
 
-def api(userObject):
-    print(userObject)
-    key = 'SJ11I1BHEDRFJ1B6' # api key
-    symbol = userObject["symbol"]
+def api(condition, datesArray, chartChoice):
 
-    try:
-        match userObject["timeSeriesObject"]["series"]:
-            case "1":
-                intraInterval = userObject["timeSeriesObject"]["interval"]
-                intraday = "TIME_SERIES_INTRADAY"
-                url = f"https://www.alphavantage.co/query?function={intraday}&symbol={symbol}&interval={intraInterval}min&apikey={key}&datatype=csv"
-            case "2":
-                daily = "TIME_SERIES_DAILY"
-                url = f"https://www.alphavantage.co/query?function={daily}&symbol={symbol}&apikey={key}&datatype=csv"
-            case "3":
-                weekly = "TIME_SERIES_WEEKLY"
-                url = f"https://www.alphavantage.co/query?function={weekly}&symbol={symbol}&apikey={key}&datatype=csv"
-            case "4":
-                monthly = "TIME_SERIES_MONTHLY"
-                url = f"https://www.alphavantage.co/query?function={monthly}&symbol={symbol}&apikey={key}&datatype=csv"
-            case _:
-                print("Error occured. Please try again.")
-                main()
-        generateChart(url,userObject)
-    except Exception as e:
-        print(f"Error occurred: {e}. Please check if symbol is correct.")
+    key = 'SJ11I1BHEDRFJ1B6' # api key
+
+    match condition[0]:
+        case "1":
+            intraInterval = condition[1]
+            intraday = "TIME_SERIES_INTRADAY"
+            url = f"https://www.alphavantage.co/query?function={intraday}&symbol={condition[2]}&interval={intraInterval}min&apikey={key}&datatype=csv"
+            generateChart(url, chartChoice)
+        case "2":
+            daily = "TIME_SERIES_DAILY"
+            url = f"https://www.alphavantage.co/query?function={daily}&symbol={condition[2]}&apikey={key}&datatype=csv"
+            generateChart(url, chartChoice)
+        case "3":
+            weekly = "TIME_SERIES_WEEKLY"
+            url = f"https://www.alphavantage.co/query?function={weekly}&symbol={condition[2]}&apikey={key}&datatype=csv"
+            generateChart(url, chartChoice)
+        case "4":
+            monthly = "TIME_SERIES_MONTHLY"
+            url = f"https://www.alphavantage.co/query?function={monthly}&symbol={condition[2]}&apikey={key}&datatype=csv"
+            generateChart(url, chartChoice)
+            # url2 = f"https://www.alphavantage.co/query?function={monthly}&symbol={condition[2]}&start.date=%7BstartDate%7D&end.date=%7BgetEndDate%7D&inte&apikey=%7BBSJ11I1BHEDRFJ1B6%7D"
+        case _:
+            print("Error occured. Please try again.")
+            main()
 
             
-def generateChart(url,userObject):
-
-    symbol = userObject["symbol"]
-    beginDate = userObject["datesObject"][0]
-    endDate = userObject["datesObject"][1]
-    chartChoice = str(userObject["chart"])
-
-    isIntra = userObject["timeSeriesObject"]["isIntra"]
-
-
-    if chartChoice == "1":
-        chart = pg.Bar()
-    if chartChoice == "2":
-        chart = pg.Line(x_label_rotation=20)
-    
-    csvRow = pd.read_csv(url,
+def generateChart(url, chartChoice):
+    data_frame = pd.read_csv(url)
+    data_frame.head
+    data_frame = pd.read_csv(url,
                     dtype={
-                        "timestamp" : str,
+                        "date" : str,
                         "open" : float, 
                         "high" : float,
-                        "low" : float,
+                         "low" : float,
                         "close" : float
                     })
 
-    if isIntra == True:
-        csvRow = pd.read_csv(url, dtype={
-                        "timestamp" : str,
-                        "open" : float, 
-                        "high" : float,
-                        "low" : float,
-                        "close" : float
-                    })
-        csvRow["timestamp"] = pd.to_datetime(csvRow["timestamp"])
-        mask = (csvRow["timestamp"] > beginDate) & (csvRow["timestamp"] <= endDate)
+    a = []
+    b = []
+    c = []
+    d = []
 
-        data_Frame = csvRow.loc[mask]
-        chart.title = f"Stock Data for {symbol}: {beginDate} to {endDate}"
-
-        timestamp = []
-        open = []
-        high = []
-        low = []
-        close = []
-        for i, r in data_Frame.iterrows():
-            timestamp.append(r["timestamp"])
-            open.append(r["open"])
-            high.append(r["high"])
-            low.append(r["low"])
-            close.append(r["close"])
-
-        chart.x_labels = timestamp
-
-        chart.add('open', open)
-        chart.add('high', high)
-        chart.add('low', low)
-        chart.add('close', close)
-
-        chart.render_in_browser()
-
-
-
-
-    csvRow["timestamp"] = pd.to_datetime(csvRow["timestamp"])
-    mask = (csvRow["timestamp"] > beginDate) & (csvRow["timestamp"] <= endDate)
-
-    data_Frame = csvRow.loc[mask]
-
-    chart.title = f"Stock Data for {symbol}: {beginDate} to {endDate}"
-
-    timestamp = []
-    open = []
-    high = []
-    low = []
-    close = []
-
-
-    print(data_Frame)
-
-    for i, r in data_Frame.iterrows():
-        timestamp.append(r["timestamp"])
-        open.append(r["open"])
-        high.append(r["high"])
-        low.append(r["low"])
-        close.append(r["close"])
-
-    chart.x_labels = timestamp
-
-    chart.add('open', open)
-    chart.add('high', high)
-    chart.add('low', low)
-    chart.add('close', close)
-
+    chart = pg.Bar() if chartChoice == 1 else pg.Line()
+    #titles 
+    line_chart_title = 'Open, High, Low and Close'
+    #range of months 1 to 12
+    chart.x_labels = map(str, range(2002, 208))
+    for index, row in data_frame.iterrows():
+        a.append(row["open"])
+        b.append(row["high"])
+        c.append(row["low"])
+        d.append(row["close"])
+    # adding appended list
+    chart.add('open', a)
+    chart.add('high', b)
+    chart.add('low', c)
+    chart.add('close', d)
+    #file render
     chart.render_in_browser()
 
 
-def createUserObject():
-    symbol = fetchSymbol()
-    chart = chartType()
-    timeSeriesObject = get_time_series()
-    datesArray = getDates()
-
-    userObject = {"symbol": symbol,
-                "chart": chart,
-                "timeSeriesObject": timeSeriesObject,
-                "datesObject": datesArray}
-
-    return userObject
-
 def main():
     while True:
-        userObject = createUserObject()
-        api(userObject)
+        symbol = fetchSymbol()
+        chartChoice = chartType()
+        userChoiceArray = get_time_series(symbol)
+        datesArray = getDates()
+        api(userChoiceArray, datesArray, chartChoice)
 
         print('')
         runAgain = input("Would you like to view more stock data? (y/n): ")
