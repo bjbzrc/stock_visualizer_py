@@ -223,7 +223,6 @@ def generateChart(url,userObject):
     low = []
     close = []
 
-
     print(data_Frame)
 
     for i, r in data_Frame.iterrows():
@@ -262,6 +261,7 @@ def createUserObject():
                 "datesObject": datesArray}
 
     return userObject
+
 
 def main():
     while True:
